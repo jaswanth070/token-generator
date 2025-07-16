@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Generator</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+
+    @media print {
+      .page-break { page-break-after: always; }
+      .no-print { display: none !important; }
+      body { margin: 0; padding: 0; }
+    }
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+
+    /* Token Styles - Keep Original */
+    .page {
+      display: grid;
+      gap: 0;
+      width: 100vw;
+      height: 100vh;
+      page-break-after: always;
+    }
+
+    .token-box {
+      position: relative;
+      border: 1px solid #000;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      height: 100%;
+      width: 100%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+
+    .token-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+    }
+
+    .token-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    .token-main-title {
+      font-weight: 700;
+      margin-bottom: 2px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .token-second-title {
+      font-weight: 500;
+      margin-bottom: 8px;
+      line-height: 1.2;
+      font-style: italic;
+    }
+
+    .token-number {
+      font-weight: bold;
+      margin: 5px 0;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Position Classes */
+    .text-left { text-align: left; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+
+    /* Preview Token Styles - Keep Original */
+    .preview-token {
+      width: 280px;
+      height: 200px;
+      border: 2px solid #000;
+      margin: 0 auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 10px;
+      box-sizing: border-box;
+      background: white;
+    }
+
+    .preview-token .token-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+    }
+
+    .preview-token .token-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    /* Custom Tailwind Components */
+    .gradient-bg {
+      background: linear-gradient(135deg, #007367 0%, #005a52 100%);
+    }
+
+    .glass-effect {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Custom Radio Buttons */
+    .position-radio {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #007367;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .position-radio:checked {
+      background-color: #007367;
+    }
+
+    .position-radio:checked::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'poppins': ['Poppins', 'sans-serif'],
+          },
+          colors: {
+            'primary': {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              300: '#5eead4',
+              400: '#2dd4bf',
+              500: '#007367',
+              600: '#005a52',
+              700: '#004d44',
+              800: '#003d36',
+              900: '#002e28',
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- Main Container -->
+<div class="no-print">
+  <!-- Header -->
+  <div class="gradient-bg text-white py-6 shadow-lg">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl font-bold text-center">Token Generator</h1>
+      <!-- <p class="text-center mt-2 text-teal-100">Create professional tokens with custom positioning</p> -->
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Form Section -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <form id="token-form" class="space-y-6">
+            
+            <!-- Logo Upload Section -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <span class="bg-primary-100 text-primary-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
+                Logo Upload
+              </h3>
+              
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary-400 transition-colors">
+                <input type="file" id="logo-upload" accept="image/*" required class="hidden">
+                <label for="logo-upload" class="cursor-pointer">
+                  <div class="space-y-2">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="text-gray-600">
+                      <span class="font-medium text-primary-600 hover:text-primary-500">Click to upload</span> or drag and drop
+                    </div>
+                    <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                </label>
+              </div>
+              
+              <img id="logo-preview" class="hidden mx-auto max-w-24 max-h-24 rounded-lg shadow-md border" alt="Logo Preview">
+              
+              <!-- Logo Opacity -->
+              <div class="bg-gray-50 rounded-lg p-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Logo Opacity: <span class="text-primary-600 font-semibold" id="opacity-display">0.1</span>
+                </label>
+                <input type="range" id="logo-opacity" min="0.05" max="0.5" step="0.05" value="0.1" 
+                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+              </div>
+            </div>
+
+            <!-- Titles Section -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <span class="bg-green-100 text-green-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
+                Titles (Optional)
+              </h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Main Title</label>
+                  <input type="text" id="main-title" placeholder="e.g., Mega Job Mela" 
+                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Second Title</label>
+                  <input type="text" id="second-title" placeholder="e.g., Entry Token" 
+                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+              </div>
+            </div>
+
+            <!-- Position Controls -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <span class="bg-yellow-100 text-yellow-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
+                Text Positioning
+              </h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Main Title Position -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-3">Main Title Position</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="main-title-position" value="left" class="position-radio">
+                      <span class="text-sm">Left</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="main-title-position" value="center" checked class="position-radio">
+                      <span class="text-sm">Center</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="main-title-position" value="right" class="position-radio">
+                      <span class="text-sm">Right</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Second Title Position -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-3">Second Title Position</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="second-title-position" value="left" class="position-radio">
+                      <span class="text-sm">Left</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="second-title-position" value="center" checked class="position-radio">
+                      <span class="text-sm">Center</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="second-title-position" value="right" class="position-radio">
+                      <span class="text-sm">Right</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Token Number Position -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-3">Token Number Position</label>
+                  <div class="space-y-2">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="token-number-position" value="left" class="position-radio">
+                      <span class="text-sm">Left</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="token-number-position" value="center" checked class="position-radio">
+                      <span class="text-sm">Center</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                      <input type="radio" name="token-number-position" value="right" class="position-radio">
+                      <span class="text-sm">Right</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layout Configuration -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <span class="bg-purple-100 text-purple-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">4</span>
+                Layout Configuration
+              </h3>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Rows</label>
+                  <input type="number" id="grid-rows" value="4" min="1" max="10" required 
+                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Columns</label>
+                  <input type="number" id="grid-cols" value="5" min="1" max="10" required 
+                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+              </div>
+              
+              <div class="bg-gradient-to-r from-primary-50 to-teal-50 rounded-lg p-4 border border-primary-200">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-gray-800" id="tokens-per-sheet">20</div>
+                  <div class="text-sm text-gray-600">Tokens per sheet</div>
+                  <div class="text-xs text-gray-500 mt-1">Layout: <span id="layout-display">4×5</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Token Configuration -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <span class="bg-orange-100 text-orange-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">5</span>
+                Token Configuration
+              </h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Starting Token Number</label>
+                  <input type="number" id="start-number" value="1" min="1" required 
+                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Total Number of Tokens</label>
+                  <input type="number" id="total-tokens" value="100" min="1" max="50000" required 
+                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                </div>
+              </div>
+            </div>
+
+            <!-- Size Controls -->
+            <div class="space-y-4">
+              <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <span class="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">6</span>
+                Size Adjustments
+              </h3>
+              
+              <div class="space-y-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Main Title Size: <span class="text-primary-600 font-semibold" id="main-size-display">16pt</span>
+                  </label>
+                  <input type="range" id="main-title-size" min="8" max="32" step="1" value="16" 
+                         class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Second Title Size: <span class="text-primary-600 font-semibold" id="second-size-display">7pt</span>
+                  </label>
+                  <input type="range" id="second-title-size" min="5" max="14" step="1" value="7" 
+                         class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Token Number Size: <span class="text-primary-600 font-semibold" id="number-size-display">24pt</span>
+                  </label>
+                  <input type="range" id="token-number-size" min="16" max="40" step="2" value="24" 
+                         class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+              </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold py-4 px-6 rounded-xl hover:from-primary-700 hover:to-primary-800 transform hover:scale-105 transition-all duration-200 shadow-lg">
+              <span class="flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Generate Tokens
+              </span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 sticky top-8">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6 text-center flex items-center justify-center">
+            <svg class="w-6 h-6 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            Live Preview
+          </h3>
+          
+          <div class="flex justify-center">
+            <div class="preview-token" id="token-preview">
+              <div class="token-content">
+                <div class="token-main-title" id="preview-main-title"></div>
+                <div class="token-second-title" id="preview-second-title"></div>
+                <div class="token-number" id="preview-number">0001</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6 text-center text-sm text-gray-500">
+            <p>This is how your token will appear when printed</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Message -->
+<div class="no-print fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" id="success-overlay">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </div>
+    <h3 class="text-xl font-semibold text-gray-800 mb-2">✅ Tokens Generated Successfully!</h3>
+    <p class="text-gray-600 mb-6">
+      Total tokens: <span class="font-semibold" id="total-count"></span> | 
+      Pages: <span class="font-semibold" id="page-count"></span> | 
+      Layout: <span class="font-semibold" id="final-layout"></span>
+    </p>
+    <div class="space-y-3">
+      <button onclick="window.print()" class="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary-700 transition-colors">
+        🖨️ Print Tokens
+      </button>
+      <button onclick="resetForm()" class="w-full bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors">
+        🔄 Generate New Tokens
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="pages-container"></div>
+
+<script>
+$(document).ready(function() {
+  let logoDataUrl = '';
+
+  // Update layout info when grid changes
+  function updateLayoutInfo() {
+    const rows = parseInt($('#grid-rows').val());
+    const cols = parseInt($('#grid-cols').val());
+    const tokensPerSheet = rows * cols;
+    
+    $('#tokens-per-sheet').text(tokensPerSheet);
+    $('#layout-display').text(rows + '×' + cols);
+  }
+
+  // Update range displays
+  function updateRangeDisplays() {
+    $('#opacity-display').text($('#logo-opacity').val());
+    $('#main-size-display').text($('#main-title-size').val() + 'pt');
+    $('#second-size-display').text($('#second-title-size').val() + 'pt');
+    $('#number-size-display').text($('#token-number-size').val() + 'pt');
+  }
+
+  // Update preview
+  function updatePreview() {
+    const mainTitle = $('#main-title').val().trim();
+    const secondTitle = $('#second-title').val().trim();
+    const mainSize = $('#main-title-size').val() + 'pt';
+    const secondSize = $('#second-title-size').val() + 'pt';
+    const numberSize = $('#token-number-size').val() + 'pt';
+    const opacity = $('#logo-opacity').val();
+
+    // Get positions
+    const mainPosition = $('input[name="main-title-position"]:checked').val();
+    const secondPosition = $('input[name="second-title-position"]:checked').val();
+    const numberPosition = $('input[name="token-number-position"]:checked').val();
+
+    // Update preview content
+    $('#preview-main-title')
+      .text(mainTitle)
+      .css('font-size', mainSize)
+      .removeClass('text-left text-center text-right')
+      .addClass('text-' + mainPosition);
+    
+    $('#preview-second-title')
+      .text(secondTitle)
+      .css('font-size', secondSize)
+      .removeClass('text-left text-center text-right')
+      .addClass('text-' + secondPosition);
+    
+    $('#preview-number')
+      .css('font-size', numberSize)
+      .removeClass('text-left text-center text-right')
+      .addClass('text-' + numberPosition);
+
+    // Show/hide titles based on content
+    $('#preview-main-title').toggle(mainTitle !== '');
+    $('#preview-second-title').toggle(secondTitle !== '');
+
+    // Update logo opacity in preview
+    if (logoDataUrl) {
+      $('#token-preview .token-watermark').css('opacity', opacity);
+    }
+  }
+
+  // Handle logo upload and preview
+  $('#logo-upload').change(function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        logoDataUrl = e.target.result;
+        $('#logo-preview').attr('src', logoDataUrl).removeClass('hidden');
+        
+        // Add watermark to preview
+        if ($('#token-preview .token-watermark').length === 0) {
+          $('#token-preview').prepend(`<img class="token-watermark" src="${logoDataUrl}" alt="Logo">`);
+        } else {
+          $('#token-preview .token-watermark').attr('src', logoDataUrl);
+        }
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Event listeners for real-time updates
+  $('#grid-rows, #grid-cols').on('input', updateLayoutInfo);
+  $('#logo-opacity, #main-title-size, #second-title-size, #token-number-size').on('input', function() {
+    updateRangeDisplays();
+    updatePreview();
+  });
+  $('#main-title, #second-title').on('input', updatePreview);
+  $('input[name="main-title-position"], input[name="second-title-position"], input[name="token-number-position"]').on('change', updatePreview);
+
+  // Initialize displays
+  updateLayoutInfo();
+  updateRangeDisplays();
+  updatePreview();
+
+  // Handle form submission
+  $('#token-form').submit(function(e) {
+    e.preventDefault();
+    
+    const mainTitle = $('#main-title').val().trim();
+    const secondTitle = $('#second-title').val().trim();
+    const startNumber = parseInt($('#start-number').val());
+    const totalTokens = parseInt($('#total-tokens').val());
+    const rows = parseInt($('#grid-rows').val());
+    const cols = parseInt($('#grid-cols').val());
+    const mainSize = $('#main-title-size').val() + 'pt';
+    const secondSize = $('#second-title-size').val() + 'pt';
+    const numberSize = $('#token-number-size').val() + 'pt';
+    const opacity = $('#logo-opacity').val();
+    
+    // Get positions
+    const mainPosition = $('input[name="main-title-position"]:checked').val();
+    const secondPosition = $('input[name="second-title-position"]:checked').val();
+    const numberPosition = $('input[name="token-number-position"]:checked').val();
+
+    if (!logoDataUrl) {
+      alert('Please upload a logo image.');
+      return;
+    }
+
+    generateTokens(logoDataUrl, mainTitle, secondTitle, startNumber, totalTokens, rows, cols, mainSize, secondSize, numberSize, opacity, mainPosition, secondPosition, numberPosition);
+  });
+});
+
+function generateTokens(logoUrl, mainTitle, secondTitle, startNumber, totalTokens, rows, cols, mainSize, secondSize, numberSize, opacity, mainPosition, secondPosition, numberPosition) {
+  const tokensPerPage = rows * cols;
+  const totalPages = Math.ceil(totalTokens / tokensPerPage);
+  const container = $('#pages-container');
+  
+  // Clear previous tokens
+  container.empty();
+
+  for (let page = 0; page < totalPages; page++) {
+    const pageDiv = $('<div class="page"></div>');
+    pageDiv.css({
+      'grid-template-columns': `repeat(${cols}, 1fr)`,
+      'grid-template-rows': `repeat(${rows}, 1fr)`
+    });
+    
+    for (let i = 0; i < tokensPerPage; i++) {
+      const tokenIndex = page * tokensPerPage + i;
+      if (tokenIndex >= totalTokens) break;
+      
+      const tokenNumber = (startNumber + tokenIndex).toString().padStart(4, '0');
+      
+      const tokenBox = $('<div class="token-box"></div>');
+      
+      // Add watermark
+      const watermark = $(`<img class="token-watermark" src="${logoUrl}" alt="Logo">`);
+      watermark.css('opacity', opacity);
+      tokenBox.append(watermark);
+      
+      // Add content
+      const content = $('<div class="token-content"></div>');
+      
+      if (mainTitle) {
+        const mainTitleDiv = $(`<div class="token-main-title text-${mainPosition}">${mainTitle}</div>`);
+        mainTitleDiv.css('font-size', mainSize);
+        content.append(mainTitleDiv);
+      }
+      
+      if (secondTitle) {
+        const secondTitleDiv = $(`<div class="token-second-title text-${secondPosition}">${secondTitle}</div>`);
+        secondTitleDiv.css('font-size', secondSize);
+        content.append(secondTitleDiv);
+      }
+      
+      const numberDiv = $(`<div class="token-number text-${numberPosition}">${tokenNumber}</div>`);
+      numberDiv.css('font-size', numberSize);
+      content.append(numberDiv);
+      
+      tokenBox.append(content);
+      pageDiv.append(tokenBox);
+    }
+    
+    container.append(pageDiv);
+  }
+
+  // Show success overlay
+  $('#success-overlay').removeClass('hidden');
+  $('#total-count').text(totalTokens);
+  $('#page-count').text(totalPages);
+  $('#final-layout').text(rows + '×' + cols);
+}
+
+function resetForm() {
+  $('#success-overlay').addClass('hidden');
+  $('#token-form')[0].reset();
+  $('#logo-preview').addClass('hidden');
+  $('#token-preview .token-watermark').remove();
+  $('#pages-container').empty();
+  
+  // Reset radio buttons to center
+  $('input[name="main-title-position"][value="center"]').prop('checked', true);
+  $('input[name="second-title-position"][value="center"]').prop('checked', true);
+  $('input[name="token-number-position"][value="center"]').prop('checked', true);
+  
+  // Reset displays
+  $('#tokens-per-sheet').text('20');
+  $('#layout-display').text('4×5');
+  $('#opacity-display').text('0.1');
+  $('#main-size-display').text('8pt');
+  $('#second-size-display').text('7pt');
+  $('#number-size-display').text('24pt');
+  
+  updatePreview();
+  $('html, body').animate({ scrollTop: 0 }, 'fast');
+}
+</script>
+
+</body>
+</html>
